@@ -1,0 +1,21 @@
+# Cache do COTAHIST (arquivos grandes, não subir)
+cotahist_cache/
+
+# Relatórios gerados automaticamente
+scanner_*.txt
+scanner_*.xlsx
+scanner_*.html
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.python-version
+
+# Streamlit local
+.streamlit/secrets.toml
+
+# Arquivos temporários
+unpacked_manual/
+*.zip
+*.ZIP
