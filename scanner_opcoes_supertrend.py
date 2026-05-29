@@ -45,7 +45,7 @@ except ImportError:
 ATIVOS_PADRAO = [
     "PETR4.SA", "VALE3.SA", "CSNA3.SA", "USIM5.SA",
     "GOAU4.SA", "GGBR4.SA", "MGLU3.SA", "BRAV3.SA",
-    "BRAP4.SA", "CMIN3.SA", "MRFG3.SA", "ASAI3.SA",
+    "BRAP4.SA", "CMIN3.SA", "ASAI3.SA",
 ]
 
 ATR_PERIODO     = 10
