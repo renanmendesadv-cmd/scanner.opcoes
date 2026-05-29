@@ -251,15 +251,15 @@ def atualizar_precos(opcoes_df) -> tuple[pd.DataFrame, int]:
         elif stop_val is not None and pnl <= (stop_val - entrada_ref):
             status = "Stop atingido"
 
-        df.at[idx, "preco_atual"]       = round(preco_atual_net, 4)
-        df.at[idx, "pnl_rs"]            = round(pnl, 4)
-        df.at[idx, "pnl_pct"]           = round(pnl_pct, 2)
+        df.at[idx, "preco_atual"]       = str(round(preco_atual_net, 4))
+        df.at[idx, "pnl_rs"]            = str(round(pnl, 4))
+        df.at[idx, "pnl_pct"]           = str(round(pnl_pct, 2))
         df.at[idx, "data_atualizacao"]  = hoje
         df.at[idx, "status"]            = status
 
         if status != "Aberto":
             df.at[idx, "data_fechamento"]  = hoje
-            df.at[idx, "preco_fechamento"] = round(preco_atual_net, 4)
+            df.at[idx, "preco_fechamento"] = str(round(preco_atual_net, 4))
 
         atualizados += 1
 
