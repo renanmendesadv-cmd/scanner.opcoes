@@ -240,16 +240,54 @@ def atualizar_precos(opcoes_df) -> tuple[pd.DataFrame, int]:
 
         # Verificar stop/alvo
         try:
-            stop_val = float(row["stop"]) if str(row["stop"]).strip() else None
-            alvo_val = float(row["alvo"]) if str(row["alvo"]).strip() else None
+            stop_str = str(row["stop"]).strip()
+            alvo_str = str(row["alvo"]).strip()
+            stop_val = float(stop_str) if stop_str not in ("", "nan") else None
+            alvo_val = float(alvo_str) if alvo_str not in ("", "nan") else None
         except (ValueError, TypeError):
             stop_val = alvo_val = None
 
         status = "Aberto"
-        if alvo_val is not None and pnl >= (alvo_val - entrada_ref):
-            status = "Alvo atingido"
-        elif stop_val is not None and pnl <= (stop_val - entrada_ref):
-            status = "Stop atingido"
+        has_leg2 = bool(leg2_tk and leg2_tk not in ("", "nan"))
+
+        if leg1_acao == "COMPRAR":
+            # ── Posição de débito (compra de opção ou spread de débito) ──
+            # preco_atual_net = valor atual da posição (entrada + variação)
+            # alvo: posição vale >= alvo_val
+            if alvo_val is not None and preco_atual_net >= alvo_val:
+                status = "Alvo atingido"
+            # stop: só aciona quando stop_val < entrada (faz sentido para compra)
+            # Spreads de débito têm stop = net_debit = entrada → ignorar nesse caso
+            elif stop_val is not None and stop_val < entrada_ref * 0.99 and preco_atual_net <= stop_val:
+                status = "Stop atingido"
+            elif pnl_pct <= -90:
+                # Rede de segurança: perdeu ≥ 90 % do investimento
+                status = "Stop atingido"
+
+        else:
+            # ── Posição de crédito (venda de opção ou spread de crédito) ──
+            # P&L positivo = bom (opção caiu, recompra mais barata)
+            # alvo: pnl ≥ (crédito recebido − preço-alvo de saída)
+            if alvo_val is not None:
+                if alvo_val < entrada_ref:
+                    # Venda normal / spread crédito: alvo é preço de recompra
+                    alvo_ok = pnl >= (entrada_ref - alvo_val)
+                else:
+                    # Lançamento coberto / alvo = crédito cheio: expirar sem valor
+                    alvo_ok = pnl >= entrada_ref * 0.90
+                if alvo_ok:
+                    status = "Alvo atingido"
+
+            # stop: depende se há segunda perna (spread) ou não (venda seca)
+            if status == "Aberto" and stop_val is not None:
+                if has_leg2:
+                    # Spread de crédito: stop_val = perda máxima em R$
+                    if pnl <= -stop_val:
+                        status = "Stop atingido"
+                else:
+                    # Venda seca: stop_val = preço da opção que aciona saída
+                    if pnl <= (entrada_ref - stop_val):
+                        status = "Stop atingido"
 
         df.at[idx, "preco_atual"]       = str(round(preco_atual_net, 4))
         df.at[idx, "pnl_rs"]            = str(round(pnl, 4))
